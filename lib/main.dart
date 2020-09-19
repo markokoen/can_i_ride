@@ -7,8 +7,9 @@ void main() {
 }
 
 Future<Weather> fetchWeather() async {
-  final response = await http.get(
-      'http://api.weatherstack.com/current?access_key=c62bd66c99a40bb534b87ba5864e99c&query=Stellenbosch');
+  // final response = await http.get(
+  //     'http://api.weatherstack.com/current?access_key=c62bd66c99a40bb534b87ba5864e99c&query=Stellenbosch');
+  final response = await http.get('https://jsonkeeper.com/b/HDKG');
   print(response);
   if (response.statusCode == 200) {
     return Weather.fromJson(json.decode(response.body));
@@ -20,13 +21,21 @@ Future<Weather> fetchWeather() async {
 class Weather {
   final int temp;
   final String desc;
+  final String location;
+  final String wind;
+  final String image;
 
-  Weather({this.temp, this.desc});
+  Weather({this.temp, this.desc, this.location, this.wind, this.image});
 
   factory Weather.fromJson(Map<String, dynamic> json) {
     return Weather(
       temp: json['current']['temperature'],
+      location: json['request']['query'],
       desc: json['current']['weather_descriptions'][0],
+      wind: json['current']['wind_speed'].toString() +
+          " km/h " +
+          json['current']['wind_dir'],
+      image: json['current']['weather_icons'][0],
     );
   }
 }
@@ -101,25 +110,46 @@ class _MyHomePageState extends State<MyHomePage> {
         // the App.build method, and use it to set our appbar title.
         title: Text(widget.title),
       ),
-      body: Center(
-        child: FutureBuilder<Weather>(
-          future: myWeather,
-          builder: (context, snapshot) {
-            if (snapshot.hasData) {
-              return Text('Current Temperature: ' +
-                  snapshot.data.temp.toString() +
-                  '\n' +
-                  'Conditions: ' +
-                  snapshot.data.desc);
-            } else if (snapshot.hasError) {
-              return Text("${snapshot.error}");
-            }
-
-            // By default, show a loading spinner.
-            return CircularProgressIndicator();
-          },
+      body: Row(children: [
+        Expanded(
+          child: FutureBuilder<Weather>(
+            future: myWeather,
+            builder: (context, snapshot) {
+              if (snapshot.hasData) {
+                return Text('Location: ' +
+                    snapshot.data.location +
+                    '\n \n' +
+                    'Current Temperature: ' +
+                    snapshot.data.temp.toString() +
+                    '°C\n' +
+                    'Wind: ' +
+                    snapshot.data.wind +
+                    '\n' +
+                    'Conditions: ' +
+                    snapshot.data.desc);
+              } else if (snapshot.hasError) {
+                return Text("${snapshot.error}");
+              }
+              // By default, show a loading spinner.
+              return CircularProgressIndicator();
+            },
+          ),
         ),
-      ),
+        Expanded(
+          child: FutureBuilder<Weather>(
+            future: myWeather,
+            builder: (context, snapshot) {
+              if (snapshot.hasData) {
+                return Image.network(snapshot.data.image);
+              } else if (snapshot.hasError) {
+                return Text("${snapshot.error}");
+              }
+              // By default, show a loading spinner.
+              return CircularProgressIndicator();
+            },
+          ),
+        ),
+      ]),
       floatingActionButton: FloatingActionButton(
         onPressed: _canIRide,
         tooltip: 'Can I Ride?',
