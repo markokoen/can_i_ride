@@ -8,7 +8,7 @@ void main() {
 
 Future<Weather> fetchWeather() async {
   final response = await http.get(
-      'http://api.weatherstack.com/current?access_key=c62bd66c99a40bb534b87ba5864e99ca&query=Stellenbosch');
+      'http://api.weatherstack.com/current?access_key=c62bd66c99a40bb534b87ba5864e99c&query=Stellenbosch');
   print(response);
   if (response.statusCode == 200) {
     return Weather.fromJson(json.decode(response.body));
